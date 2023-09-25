@@ -54,7 +54,7 @@ services:
       --rpc.port=8547
       --p2p.disable
       --rpc.enable-admin
-      --sequencer.enabled
+      --sequencer.enabled=false
       --sequencer.l1-confs=3
       --p2p.sequencer.key=$SEQ_KEY
     depends_on:
