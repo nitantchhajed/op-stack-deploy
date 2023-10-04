@@ -1,0 +1,26 @@
+version: '3.4'
+
+services:  
+  op-batcher:
+    image: op-batcher:1
+    restart: always
+    ports:
+      - "8548:8548"
+    command: >
+      --l1-eth-rpc=${L1_RPC}
+      --l2-eth-rpc=http://op-geth:8545
+      --rollup-rpc=http://op-node:8547
+      --poll-interval=1s
+      --sub-safety-margin=6
+      --num-confirmations=1
+      --safe-abort-nonce-too-low-count=3
+      --resubmission-timeout=30s
+      --rpc.addr=0.0.0.0
+      --rpc.port=8548
+      --rpc.enable-admin
+      --max-channel-duration=1
+      --private-key=${BATCHER_KEY}
+networks: 
+  default: 
+    external: 
+      name: slice-ledger
