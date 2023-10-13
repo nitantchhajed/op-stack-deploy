@@ -34,7 +34,7 @@ services:
       --rollup.disabletxpoolgossip=true
 
   op-node:
-    image: op-node:1
+    image: racecommunity/op-node:1
     ports:
       - "8547:8547"
     restart: always
