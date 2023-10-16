@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  heartbeat:
+    image: racecommunity/heartbeat:1
+    restart: always
+    ports:
+      - "9100:9100"
+    command: >
+      --rpc.provider=http://racetestnet.io --label.network=racecommunity
+networks:
+ default:
+  externl:
+    name: race-testnet
