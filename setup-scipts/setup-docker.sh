@@ -13,3 +13,6 @@ sudo apt-get install docker-compose-plugin
 
 #giving permissions to docker
 sudo chmod 666 /var/run/docker.sock
+
+#creating docker network
+docker network create race-testnet
