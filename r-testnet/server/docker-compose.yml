@@ -51,7 +51,6 @@ services:
       --rollup.config=./rollup.json
       --rpc.addr=0.0.0.0
       --rpc.port=8547
-      --p2p.static=/ip4/43.204.127.52/tcp/9003
       --p2p.listen.ip=0.0.0.0 
       --p2p.listen.tcp=9003 
       --p2p.listen.udp=9003
