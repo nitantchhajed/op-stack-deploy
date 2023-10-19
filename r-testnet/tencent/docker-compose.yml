@@ -1,0 +1,136 @@
+version: '3.4'
+
+services:
+  op-geth:
+    image: racecommunity/op-geth:1
+    restart: always
+    ports:
+      - "8545:8545"
+    volumes:
+      - /root/op-geth/datadir:/datadir
+      - /root/op-geth/jwt.txt:/jwt.txt
+      - /root/op-geth/genesis.json:/genesis.json
+    command: >
+      --datadir /datadir
+      --http
+      --http.corsdomain="*"
+      --http.vhosts="*"
+      --http.addr=0.0.0.0
+      --http.api=web3,debug,eth,txpool,net,engine
+      --ws
+      --ws.addr=0.0.0.0
+      --ws.port=8546
+      --ws.origins="*"
+      --ws.api=debug,eth,txpool,net,engine
+      --syncmode=full
+      --gcmode=archive
+      --nodiscover
+      --maxpeers=0
+      --networkid=${ID}
+      --authrpc.vhosts="*"
+      --authrpc.addr=0.0.0.0
+      --authrpc.port=8551
+      --authrpc.jwtsecret=./jwt.txt
+      --rollup.disabletxpoolgossip=true
+
+  op-node:
+    image: racecommunity/op-node:1
+    ports:
+      - "8547:8547"
+    restart: always
+    volumes:
+      - /root/optimism/op-node/jwt.txt:/jwt.txt
+      - /root/optimism/op-node/rollup.json:/rollup.json 
+    command: >
+      op-node
+      --l2=http://op-geth:8551
+      --l1=${L1_RPC}
+      --l1.rpckind=${RPC_KIND}
+      --l2.jwt-secret=./jwt.txt
+      --verifier.l1-confs=3
+      --rollup.config=./rollup.json
+      --rpc.addr=0.0.0.0
+      --rpc.port=8547
+      --p2p.static=/ip4/43.204.127.52/tcp/9003/p2p/16Uiu2HAmJNnxv7nN5uVcobYKnKrwFDFbmWipdGiqJv2gjoEneLBK
+      --p2p.listen.ip=0.0.0.0
+      --p2p.listen.tcp=9003
+      --p2p.listen.udp=9003
+      --metrics.enabled
+      --metrics.port=7500
+      --rpc.enable-admin
+      --p2p.sequencer.key=${SEQ_KEY}
+    depends_on:
+      - op-geth  # op-node depends on op-geth startup
+
+  sequencer-node:
+    image: racecommunity/op-node:1
+    ports:
+      - "8547:8547"
+    restart: always
+    volumes:
+      - /root/optimism/op-node/jwt.txt:/jwt.txt
+      - /root/optimism/op-node/rollup.json:/rollup.json
+    command: >
+      op-node
+      --l2=http://op-geth:8551
+      --l1=${L1_RPC}
+      --l1.rpckind=${RPC_KIND}
+      --l2.jwt-secret=./jwt.txt
+      --verifier.l1-confs=3
+      --rollup.config=./rollup.json
+      --rpc.addr=0.0.0.0
+      --rpc.port=8547
+      --p2p.static=/ip4/43.204.127.52/tcp/9003/p2p/16Uiu2HAmJNnxv7nN5uVcobYKnKrwFDFbmWipdGiqJv2gjoEneLBK
+      --p2p.listen.ip=0.0.0.0 
+      --p2p.listen.tcp=9003 
+      --p2p.listen.udp=9003
+      --metrics.enabled
+      --metrics.port=7500
+      --rpc.enable-admin
+      --sequencer.enabled
+      --sequencer.l1-confs=3
+      --p2p.sequencer.key=${SEQ_KEY}
+    depends_on:
+      - op-geth  # op-node depends on op-geth startup
+
+  op-batcher:
+    image: racecommunity/op-batcher:1
+    restart: always
+    ports:
+      - "8548:8548"
+    command: >
+      --l1-eth-rpc=${L1_RPC}
+      --l2-eth-rpc=http://op-geth:8545
+      --rollup-rpc=http://sequencer-node:8547
+      --poll-interval=1s
+      --sub-safety-margin=6
+      --num-confirmations=1
+      --safe-abort-nonce-too-low-count=3
+      --resubmission-timeout=30s
+      --rpc.addr=0.0.0.0
+      --rpc.port=8548
+      --rpc.enable-admin
+      --max-channel-duration=1
+      --private-key=${BATCHER_KEY}
+    depends_on:
+      - op-geth  # op-batcher depends on op-geth startup
+      - sequencer-node   # op-batcher depends on sequencer-node startup
+
+  op-proposer:
+    image: racecommunity/op-proposer:1
+    restart: always
+    command: >
+      op-proposer
+      --poll-interval=12s
+      --rpc.port=8560
+      --rollup-rpc=http://sequencer-node:8547
+      --l2oo-address=${L2OO_ADDR}
+      --private-key=${PROPOSER_KEY}
+      --l1-eth-rpc=${L1_RPC}
+    depends_on:
+      - op-geth  # op-proposer depends on op-geth startup
+      - sequencer-node   # op-proposer depends on sequencer-node startup
+networks: 
+  default: 
+    external: 
+      name: race-testnet
