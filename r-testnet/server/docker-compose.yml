@@ -79,6 +79,7 @@ services:
       --rollup.config=./rollup.json
       --rpc.addr=0.0.0.0
       --rpc.port=8547
+      --p2p.static=/ip4//tcp/9003/p2p/
       --p2p.listen.ip=0.0.0.0 
       --p2p.listen.tcp=9003 
       --p2p.listen.udp=9003
@@ -99,7 +100,7 @@ services:
     command: >
       --l1-eth-rpc=${L1_RPC}
       --l2-eth-rpc=http://op-geth:8545
-      --rollup-rpc=http://op-node:8547
+      --rollup-rpc=http://sequencer-node:8547
       --poll-interval=1s
       --sub-safety-margin=6
       --num-confirmations=1
@@ -112,7 +113,7 @@ services:
       --private-key=${BATCHER_KEY}
     depends_on:
       - op-geth  # op-batcher depends on op-geth startup
-      - op-node   # op-batcher depends on op-node startup
+      - sequencer-node   # op-batcher depends on sequencer-node startup
 
   op-proposer:
     image: racecommunity/op-proposer:1
@@ -121,13 +122,13 @@ services:
       op-proposer
       --poll-interval=12s
       --rpc.port=8560
-      --rollup-rpc=http://op-node:8547
+      --rollup-rpc=http://sequencer-node:8547
       --l2oo-address=${L2OO_ADDR}
       --private-key=${PROPOSER_KEY}
       --l1-eth-rpc=${L1_RPC}
     depends_on:
       - op-geth  # op-proposer depends on op-geth startup
-      - op-node   # op-proposer depends on op-node startup
+      - sequencer-node   # op-proposer depends on sequencer-node startup
 networks: 
   default: 
     external: 
