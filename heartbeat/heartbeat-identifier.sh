@@ -14,5 +14,6 @@ if [ "$HEALTH_STATUS" == "true" ]; then
     echo "Service is healthy. No action needed. -- $CURRENT_DATE_TIME"
 else
     echo "Service is not healthy, converting this node to Sequencer node -- $CURRENT_DATE_TIME"
-    docker compose -p ./../r-testnet/cloudsigma/docker-compose.yml up op-batcher op-proposer
+    docker compose -p ./../r-testnet/cloudsigma/docker-compose.yml down op-node
+    docker compose -p ./../r-testnet/cloudsigma/docker-compose.yml up sequencer-node op-batcher op-proposer
 fi
